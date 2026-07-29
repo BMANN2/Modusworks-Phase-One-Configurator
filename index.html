@@ -19,12 +19,15 @@ body{
 
 h1{
     margin-top:20px;
+    margin-bottom:0;
+    text-align:center;
 }
 
 #captureArea{
     display:flex;
     flex-direction:column;
     align-items:center;
+    padding:10px 20px;
 }
 
 #ring{
@@ -42,8 +45,8 @@ svg{
 
 .slot{
     position:absolute;
-    width:42px;
-    height:42px;
+    width:46px;
+    height:46px;
     border-radius:50%;
     border:3px solid white;
     cursor:pointer;
@@ -52,8 +55,10 @@ svg{
     justify-content:center;
     align-items:center;
     font-weight:bold;
+    font-size:16px;
     user-select:none;
     box-sizing:border-box;
+    z-index:2;
 }
 
 .slot:hover{
@@ -72,11 +77,61 @@ svg{
     background:#d93b3b;
 }
 
+.lockToggle{
+    position:absolute;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    border:2px solid white;
+    cursor:pointer;
+    transition:.2s;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+    font-size:9px;
+    user-select:none;
+    box-sizing:border-box;
+    z-index:1;
+}
+
+.lockToggle:hover{
+    transform:scale(1.2);
+}
+
+.tight{
+    background:#2d8cff;
+}
+
+.loose{
+    background:#e0a020;
+}
+
+.fixedMagnet{
+    position:absolute;
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#bbbbbb;
+    border:3px solid white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+    font-size:10px;
+    color:#222;
+    box-sizing:border-box;
+    text-align:center;
+    line-height:1.1;
+}
+
 #stats{
     margin-top:20px;
-    font-size:20px;
+    font-size:18px;
     display:flex;
-    gap:40px;
+    gap:25px;
+    flex-wrap:wrap;
+    justify-content:center;
 }
 
 #shareButton{
@@ -101,9 +156,9 @@ svg{
 </head>
 <body>
 
-<h1>Modusworks Phase One Configurator</h1>
-
 <div id="captureArea">
+
+<h1>Modusworks Phase One Configurator</h1>
 
 <div id="ring">
 
@@ -121,8 +176,10 @@ svg{
 
 <div id="stats">
     <div>⚪ Spacer: <span id="spacerCount">12</span></div>
-    <div>🟢 + : <span id="plusCount">0</span></div>
-    <div>🔴 - : <span id="minusCount">0</span></div>
+    <div>🟢 Attract (+): <span id="plusCount">0</span></div>
+    <div>🔴 Repel (−): <span id="minusCount">0</span></div>
+    <div>🔩 Tight: <span id="tightCount">6</span></div>
+    <div>🔩 Loose: <span id="looseCount">0</span></div>
 </div>
 
 </div>
@@ -140,31 +197,56 @@ const center=325;
 const slotRadiusInner=155;
 const slotRadiusOuter=205;
 
-const states=[
+const lockOffset=32; // how far the tight/loose toggle sits from its outer slot, radially outward
+
+const typeStates=[
     {
         cls:"spacer",
-        text:""
+        text:"",
+        code:"S"
     },
     {
         cls:"plus",
-        text:"+"
+        text:"+",
+        code:"A"
     },
     {
         cls:"minus",
-        text:"−"
+        text:"−",
+        code:"R"
     }
 ];
 
-let slots=[];
+const lockStates=[
+    {
+        cls:"tight",
+        text:"T",
+        code:"T"
+    },
+    {
+        cls:"loose",
+        text:"L",
+        code:"L"
+    }
+];
+
+let arms=[]; // one entry per arm: {inner, outer, lock}
 
 for(let i=0;i<6;i++){
 
     const angle=(Math.PI/3)*i-Math.PI/2;
 
-    [slotRadiusInner,slotRadiusOuter].forEach(radius=>{
+    let armEntry={innerDiv:null,outerDiv:null,lockDiv:null};
 
-        const x=center+Math.cos(angle)*radius-21;
-        const y=center+Math.sin(angle)*radius-21;
+    [
+        {radius:slotRadiusInner,isOuter:false},
+        {radius:slotRadiusOuter,isOuter:true}
+    ].forEach(cfg=>{
+
+        const radius=cfg.radius;
+
+        const x=center+Math.cos(angle)*radius-23;
+        const y=center+Math.sin(angle)*radius-23;
 
         const div=document.createElement("div");
 
@@ -180,17 +262,61 @@ for(let i=0;i<6;i++){
 
             div.dataset.state=state;
 
-            div.className="slot "+states[state].cls;
-            div.textContent=states[state].text;
+            div.className="slot "+typeStates[state].cls;
+            div.textContent=typeStates[state].text;
 
             updateCounts();
 
         };
 
         ring.appendChild(div);
-        slots.push(div);
+
+        if(cfg.isOuter){
+            armEntry.outerDiv=div;
+        }else{
+            armEntry.innerDiv=div;
+        }
+
+        // --- only outer-ring slots get a tight/loose toggle ---
+
+        if(cfg.isOuter){
+
+            const lockRadius=radius+lockOffset;
+
+            const lx=center+Math.cos(angle)*lockRadius-10;
+            const ly=center+Math.sin(angle)*lockRadius-10;
+
+            const lockDiv=document.createElement("div");
+
+            lockDiv.className="lockToggle tight";
+            lockDiv.dataset.state=0;
+
+            lockDiv.style.left=lx+"px";
+            lockDiv.style.top=ly+"px";
+            lockDiv.textContent=lockStates[0].text;
+
+            lockDiv.onclick=function(){
+
+                let state=(parseInt(lockDiv.dataset.state)+1)%2;
+
+                lockDiv.dataset.state=state;
+
+                lockDiv.className="lockToggle "+lockStates[state].cls;
+                lockDiv.textContent=lockStates[state].text;
+
+                updateCounts();
+
+            };
+
+            ring.appendChild(lockDiv);
+
+            armEntry.lockDiv=lockDiv;
+
+        }
 
     });
+
+    arms.push(armEntry);
 
 }
 
@@ -199,21 +325,33 @@ function updateCounts(){
     let spacer=0;
     let plus=0;
     let minus=0;
+    let tight=0;
+    let loose=0;
 
-    slots.forEach(slot=>{
+    arms.forEach(arm=>{
 
-        switch(parseInt(slot.dataset.state)){
-            case 0:
-                spacer++;
-                break;
+        [arm.innerDiv,arm.outerDiv].forEach(div=>{
 
-            case 1:
-                plus++;
-                break;
+            switch(parseInt(div.dataset.state)){
+                case 0:
+                    spacer++;
+                    break;
 
-            case 2:
-                minus++;
-                break;
+                case 1:
+                    plus++;
+                    break;
+
+                case 2:
+                    minus++;
+                    break;
+            }
+
+        });
+
+        if(parseInt(arm.lockDiv.dataset.state)===0){
+            tight++;
+        }else{
+            loose++;
         }
 
     });
@@ -221,10 +359,49 @@ function updateCounts(){
     document.getElementById("spacerCount").textContent=spacer;
     document.getElementById("plusCount").textContent=plus;
     document.getElementById("minusCount").textContent=minus;
+    document.getElementById("tightCount").textContent=tight;
+    document.getElementById("looseCount").textContent=loose;
 
 }
 
 updateCounts();
+
+// --- Fixed magnet (static, non-interactive) ---
+
+const fixedMagnetOffsetUp=70; // how far above dead-center it sits
+
+const fixedX=center-25;
+const fixedY=center-fixedMagnetOffsetUp-25;
+
+const fixedDiv=document.createElement("div");
+
+fixedDiv.className="fixedMagnet";
+fixedDiv.style.left=fixedX+"px";
+fixedDiv.style.top=fixedY+"px";
+fixedDiv.textContent="Fixed Magnet";
+
+ring.appendChild(fixedDiv);
+
+// --- Build a filename that represents the current configuration ---
+// Each arm (inside out) becomes 3 letters: inner type, outer type, outer lock.
+
+function buildConfigFilename(){
+
+    const code=arms.map(arm=>{
+
+        const innerCode=typeStates[parseInt(arm.innerDiv.dataset.state)].code;
+        const outerCode=typeStates[parseInt(arm.outerDiv.dataset.state)].code;
+        const lockCode=lockStates[parseInt(arm.lockDiv.dataset.state)].code;
+
+        return innerCode+outerCode+lockCode;
+
+    }).join("-");
+
+    return "Modusworks_"+code+".png";
+
+}
+
+// --- Screenshot ---
 
 document.getElementById("shareButton").onclick = async function(){
 
@@ -239,7 +416,7 @@ document.getElementById("shareButton").onclick = async function(){
 
     const link=document.createElement("a");
 
-    link.download="FidgetConfiguration.png";
+    link.download=buildConfigFilename();
     link.href=canvas.toDataURL("image/png");
     link.click();
 
