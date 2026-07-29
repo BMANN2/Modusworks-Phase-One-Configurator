@@ -134,6 +134,46 @@ svg{
     justify-content:center;
 }
 
+#configSection{
+    margin-top:35px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    max-width:500px;
+}
+
+#configSection label{
+    font-size:16px;
+    margin-bottom:8px;
+}
+
+#configText{
+    width:100%;
+    box-sizing:border-box;
+    padding:10px 12px;
+    font-size:16px;
+    font-family:"Courier New",monospace;
+    letter-spacing:1px;
+    text-align:center;
+    border-radius:8px;
+    border:2px solid #555;
+    background:#2b2b2b;
+    color:white;
+}
+
+#configText:focus{
+    outline:none;
+    border-color:#2d8cff;
+}
+
+#configHint{
+    margin-top:8px;
+    font-size:12px;
+    color:#aaa;
+    text-align:center;
+}
+
 #shareButton{
     margin-top:30px;
     margin-bottom:40px;
@@ -184,6 +224,12 @@ svg{
 
 </div>
 
+<div id="configSection">
+    <label for="configText">Configuration Code (copy to share, or paste one to load)</label>
+    <input type="text" id="configText" spellcheck="false" autocomplete="off">
+    <div id="configHint">Format: 6 arms from center-out, top arm first, going clockwise — e.g. SAT-SAT-SAT-SAT-SAT-SAT</div>
+</div>
+
 <button id="shareButton">
 📸 Share Configuration!
 </button>
@@ -230,10 +276,11 @@ const lockStates=[
     }
 ];
 
-let arms=[]; // one entry per arm: {inner, outer, lock}
+let arms=[]; // one entry per arm: {innerDiv, outerDiv, lockDiv}
 
 for(let i=0;i<6;i++){
 
+    // i=0 starts at the top (-90deg) and increasing i rotates clockwise
     const angle=(Math.PI/3)*i-Math.PI/2;
 
     let armEntry={innerDiv:null,outerDiv:null,lockDiv:null};
@@ -266,6 +313,7 @@ for(let i=0;i<6;i++){
             div.textContent=typeStates[state].text;
 
             updateCounts();
+            updateConfigText();
 
         };
 
@@ -305,6 +353,7 @@ for(let i=0;i<6;i++){
                 lockDiv.textContent=lockStates[state].text;
 
                 updateCounts();
+                updateConfigText();
 
             };
 
@@ -382,12 +431,12 @@ fixedDiv.textContent="Fixed Magnet";
 
 ring.appendChild(fixedDiv);
 
-// --- Build a filename that represents the current configuration ---
-// Each arm (inside out) becomes 3 letters: inner type, outer type, outer lock.
+// --- Config code string: 6 arms, top first, clockwise, each "InnerOuterLock" ---
+// e.g. spacer/repel/loose arm -> "SRL". Arms joined with "-".
 
-function buildConfigFilename(){
+function buildConfigString(){
 
-    const code=arms.map(arm=>{
+    return arms.map(arm=>{
 
         const innerCode=typeStates[parseInt(arm.innerDiv.dataset.state)].code;
         const outerCode=typeStates[parseInt(arm.outerDiv.dataset.state)].code;
@@ -397,9 +446,66 @@ function buildConfigFilename(){
 
     }).join("-");
 
-    return "Modusworks_"+code+".png";
+}
+
+function updateConfigText(){
+
+    document.getElementById("configText").value=buildConfigString();
 
 }
+
+updateConfigText();
+
+// --- Parse a pasted config string and apply it to the ring ---
+
+const configPattern=/^[SAR][SAR][TL](-[SAR][SAR][TL]){5}$/;
+
+const typeCodeToState={S:0,A:1,R:2};
+const lockCodeToState={T:0,L:1};
+
+function applyConfigString(str){
+
+    const cleaned=str.trim().toUpperCase();
+
+    if(!configPattern.test(cleaned)){
+        return false;
+    }
+
+    const groups=cleaned.split("-");
+
+    groups.forEach((group,i)=>{
+
+        const arm=arms[i];
+
+        const innerState=typeCodeToState[group[0]];
+        const outerState=typeCodeToState[group[1]];
+        const lockState=lockCodeToState[group[2]];
+
+        arm.innerDiv.dataset.state=innerState;
+        arm.innerDiv.className="slot "+typeStates[innerState].cls;
+        arm.innerDiv.textContent=typeStates[innerState].text;
+
+        arm.outerDiv.dataset.state=outerState;
+        arm.outerDiv.className="slot "+typeStates[outerState].cls;
+        arm.outerDiv.textContent=typeStates[outerState].text;
+
+        arm.lockDiv.dataset.state=lockState;
+        arm.lockDiv.className="lockToggle "+lockStates[lockState].cls;
+        arm.lockDiv.textContent=lockStates[lockState].text;
+
+    });
+
+    updateCounts();
+
+    return true;
+
+}
+
+document.getElementById("configText").addEventListener("input",function(){
+
+    applyConfigString(this.value);
+
+});
 
 // --- Screenshot ---
 
@@ -416,7 +522,7 @@ document.getElementById("shareButton").onclick = async function(){
 
     const link=document.createElement("a");
 
-    link.download=buildConfigFilename();
+    link.download=buildConfigString()+".png";
     link.href=canvas.toDataURL("image/png");
     link.click();
 
