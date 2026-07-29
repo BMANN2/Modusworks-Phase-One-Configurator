@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Modusworks Phase One Configurator</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+body{
+    margin:0;
+    background:#1f1f1f;
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+h1{
+    margin-top:20px;
+}
+
+#captureArea{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+#ring{
+    position:relative;
+    width:650px;
+    height:650px;
+    margin-top:20px;
+}
+
+svg{
+    position:absolute;
+    left:0;
+    top:0;
+}
+
+.slot{
+    position:absolute;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:3px solid white;
+    cursor:pointer;
+    transition:.2s;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+    user-select:none;
+    box-sizing:border-box;
+}
+
+.slot:hover{
+    transform:scale(1.12);
+}
+
+.spacer{
+    background:#777;
+}
+
+.plus{
+    background:#28c840;
+}
+
+.minus{
+    background:#d93b3b;
+}
+
+#stats{
+    margin-top:20px;
+    font-size:20px;
+    display:flex;
+    gap:40px;
+}
+
+#shareButton{
+    margin-top:30px;
+    margin-bottom:40px;
+    padding:15px 30px;
+    font-size:20px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:#2d8cff;
+    color:white;
+    transition:.2s;
+}
+
+#shareButton:hover{
+    background:#4fa0ff;
+    transform:scale(1.05);
+}
+</style>
+
+</head>
+<body>
+
+<h1>Modusworks Phase One Configurator</h1>
+
+<div id="captureArea">
+
+<div id="ring">
+
+<svg width="650" height="650">
+    <circle
+        cx="325"
+        cy="325"
+        r="180"
+        fill="none"
+        stroke="#555"
+        stroke-width="80"/>
+</svg>
+
+</div>
+
+<div id="stats">
+    <div>⚪ Spacer: <span id="spacerCount">12</span></div>
+    <div>🟢 + : <span id="plusCount">0</span></div>
+    <div>🔴 - : <span id="minusCount">0</span></div>
+</div>
+
+</div>
+
+<button id="shareButton">
+📸 Share Configuration!
+</button>
+
+<script>
+
+const ring=document.getElementById("ring");
+
+const center=325;
+
+const slotRadiusInner=155;
+const slotRadiusOuter=205;
+
+const states=[
+    {
+        cls:"spacer",
+        text:""
+    },
+    {
+        cls:"plus",
+        text:"+"
+    },
+    {
+        cls:"minus",
+        text:"−"
+    }
+];
+
+let slots=[];
+
+for(let i=0;i<6;i++){
+
+    const angle=(Math.PI/3)*i-Math.PI/2;
+
+    [slotRadiusInner,slotRadiusOuter].forEach(radius=>{
+
+        const x=center+Math.cos(angle)*radius-21;
+        const y=center+Math.sin(angle)*radius-21;
+
+        const div=document.createElement("div");
+
+        div.className="slot spacer";
+        div.dataset.state=0;
+
+        div.style.left=x+"px";
+        div.style.top=y+"px";
+
+        div.onclick=function(){
+
+            let state=(parseInt(div.dataset.state)+1)%3;
+
+            div.dataset.state=state;
+
+            div.className="slot "+states[state].cls;
+            div.textContent=states[state].text;
+
+            updateCounts();
+
+        };
+
+        ring.appendChild(div);
+        slots.push(div);
+
+    });
+
+}
+
+function updateCounts(){
+
+    let spacer=0;
+    let plus=0;
+    let minus=0;
+
+    slots.forEach(slot=>{
+
+        switch(parseInt(slot.dataset.state)){
+            case 0:
+                spacer++;
+                break;
+
+            case 1:
+                plus++;
+                break;
+
+            case 2:
+                minus++;
+                break;
+        }
+
+    });
+
+    document.getElementById("spacerCount").textContent=spacer;
+    document.getElementById("plusCount").textContent=plus;
+    document.getElementById("minusCount").textContent=minus;
+
+}
+
+updateCounts();
+
+document.getElementById("shareButton").onclick = async function(){
+
+    this.style.visibility="hidden";
+
+    const canvas=await html2canvas(document.getElementById("captureArea"),{
+        backgroundColor:"#1f1f1f",
+        scale:2
+    });
+
+    this.style.visibility="visible";
+
+    const link=document.createElement("a");
+
+    link.download="FidgetConfiguration.png";
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+
+};
+
+</script>
+
+</body>
+</html>
