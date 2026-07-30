@@ -12,29 +12,47 @@ body{
     background:#1f1f1f;
     color:white;
     font-family:Arial,Helvetica,sans-serif;
+}
+
+#pageWrapper{
     display:flex;
-    flex-direction:column;
-    align-items:center;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:flex-start;
+    gap:36px;
+    max-width:1080px;
+    margin:0 auto;
+    padding:14px 20px 30px;
+    box-sizing:border-box;
 }
 
 h1{
-    margin-top:20px;
+    margin-top:10px;
     margin-bottom:0;
     text-align:center;
+    font-size:22px;
 }
 
 #captureArea{
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:10px 20px;
+    flex:0 0 auto;
+}
+
+#sidePanel{
+    flex:1 1 300px;
+    width:100%;
+    max-width:300px;
+    padding-top:64px;
+    box-sizing:border-box;
 }
 
 #ring{
     position:relative;
     width:650px;
     height:650px;
-    margin-top:20px;
+    margin-top:10px;
 }
 
 svg{
@@ -65,8 +83,14 @@ svg{
     transform:scale(1.12);
 }
 
+.empty{
+    background:#000000;
+    border:3px solid #666;
+}
+
 .spacer{
-    background:#777;
+    background:#ffffff;
+    border:3px solid #333;
 }
 
 .plus{
@@ -107,6 +131,76 @@ svg{
     background:#e0a020;
 }
 
+#magnetRingGroup{
+    position:absolute;
+    left:0;
+    top:0;
+    width:650px;
+    height:650px;
+    transform-origin:325px 325px;
+}
+
+#dragTrack{
+    cursor:grab;
+    touch-action:none;
+    transition:stroke .15s;
+}
+
+#simulateButton{
+    position:absolute;
+    left:245px;
+    top:340px;
+    width:160px;
+    padding:10px 8px;
+    background:#555;
+    color:white;
+    border:2px solid white;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:bold;
+    cursor:pointer;
+    z-index:5;
+    transition:.2s;
+    text-align:center;
+}
+
+#simulateButton.simActive{
+    background:#28c840;
+    box-shadow:0 0 14px 3px rgba(40,200,64,0.65);
+}
+
+#flickButton{
+    position:absolute;
+    left:288px;
+    top:293px;
+    width:74px;
+    padding:7px 4px;
+    background:#ff7a1a;
+    color:white;
+    border:2px solid white;
+    border-radius:14px;
+    font-size:12px;
+    font-weight:bold;
+    cursor:pointer;
+    z-index:5;
+    text-align:center;
+    transition:.2s;
+    display:none;
+}
+
+#flickButton:hover{
+    filter:brightness(1.15);
+    transform:scale(1.05);
+}
+
+#simNote{
+    margin-top:10px;
+    font-size:12px;
+    color:#aaa;
+    text-align:center;
+    max-width:500px;
+}
+
 .fixedMagnet{
     position:absolute;
     width:50px;
@@ -126,32 +220,41 @@ svg{
 }
 
 #stats{
-    margin-top:20px;
-    font-size:18px;
+    margin-top:16px;
+    font-size:15px;
     display:flex;
-    gap:25px;
+    gap:10px 18px;
     flex-wrap:wrap;
     justify-content:center;
+    max-width:650px;
 }
 
 #configSection{
-    margin-top:35px;
     display:flex;
     flex-direction:column;
-    align-items:center;
+    align-items:stretch;
     width:100%;
-    max-width:500px;
+    box-sizing:border-box;
 }
 
-#configSection label{
-    font-size:16px;
-    margin-bottom:8px;
+#configSection > label{
+    font-size:17px;
+    font-weight:bold;
+    text-align:center;
+}
+
+#configHint{
+    margin-top:4px;
+    margin-bottom:14px;
+    font-size:11px;
+    color:#aaa;
+    text-align:center;
 }
 
 #configText{
     width:100%;
     box-sizing:border-box;
-    padding:10px 12px;
+    padding:12px 14px;
     font-size:16px;
     font-family:"Courier New",monospace;
     letter-spacing:1px;
@@ -167,34 +270,61 @@ svg{
     border-color:#2d8cff;
 }
 
-#configHint{
-    margin-top:8px;
-    font-size:12px;
-    color:#aaa;
+#configButtonRow{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    width:100%;
+}
+
+.actionButton{
+    padding:13px 8px;
+    font-size:14px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    color:white;
+    transition:.2s;
+    white-space:nowrap;
     text-align:center;
 }
 
-#shareButton{
-    margin-top:30px;
-    margin-bottom:40px;
-    padding:15px 30px;
-    font-size:20px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    background:#2d8cff;
-    color:white;
-    transition:.2s;
+.actionButton:hover{
+    filter:brightness(1.15);
+    transform:scale(1.03);
 }
 
-#shareButton:hover{
-    background:#4fa0ff;
-    transform:scale(1.05);
+#resetButton{
+    background:#c0392b;
+}
+
+#randomButton{
+    background:#8a4fd6;
+}
+
+#copyCodeButton{
+    background:#2d8cff;
+}
+
+#copyLinkButton{
+    background:#17a589;
+}
+
+#downloadButton{
+    background:#e0a020;
+}
+
+#copyImageButton{
+    background:#d6428a;
 }
 </style>
 
 </head>
+
 <body>
+
+<div id="pageWrapper">
 
 <div id="captureArea">
 
@@ -210,33 +340,60 @@ svg{
         fill="none"
         stroke="#555"
         stroke-width="80"/>
+    <circle
+        id="dragTrack"
+        cx="325"
+        cy="325"
+        r="265"
+        fill="none"
+        stroke="rgba(255,255,255,0.15)"
+        stroke-width="26"
+        style="pointer-events:none; opacity:0;"/>
 </svg>
+
+<div id="magnetRingGroup"></div>
+
+<button id="flickButton" type="button">Flick!</button>
+
+<button id="simulateButton" type="button">Simulate 🌀<br>(Tap to Start)</button>
 
 </div>
 
 <div id="stats">
-    <div>⚪ Spacer: <span id="spacerCount">12</span></div>
+    <div>⚫ Empty: <span id="emptyCount">12</span></div>
+    <div>⚪ Spacer: <span id="spacerCount">0</span></div>
     <div>🟢 Attract (+): <span id="plusCount">0</span></div>
     <div>🔴 Repel (−): <span id="minusCount">0</span></div>
     <div>🔩 Tight: <span id="tightCount">6</span></div>
     <div>🔩 Loose: <span id="looseCount">0</span></div>
 </div>
 
+<div id="simNote">Tap Simulate, then click-and-drag the faint outer ring to flick it and see how the magnets settle.</div>
+
 </div>
 
-<div id="configSection">
-    <label for="configText">Configuration Code (copy to share, or paste one to load)</label>
-    <input type="text" id="configText" spellcheck="false" autocomplete="off">
-    <div id="configHint">Format: 6 arms from center-out, top arm first, going clockwise — e.g. SAT-SAT-SAT-SAT-SAT-SAT</div>
+<div id="sidePanel">
+    <div id="configSection">
+        <label for="configText">Configuration Code</label>
+        <div id="configHint">Center-out, top arm first, clockwise — e.g. EET-EET-EET-EET-EET-EET</div>
+        <input type="text" id="configText" spellcheck="false" autocomplete="off">
+        <div id="configButtonRow">
+            <button id="copyCodeButton" class="actionButton" type="button">Copy Code 📋</button>
+            <button id="copyLinkButton" class="actionButton" type="button">Copy Link 🔗</button>
+            <button id="downloadButton" class="actionButton" type="button">Download 📸</button>
+            <button id="copyImageButton" class="actionButton" type="button">Copy 📸</button>
+            <button id="resetButton" class="actionButton" type="button">Reset 🔄️</button>
+            <button id="randomButton" class="actionButton" type="button">Random 🤪</button>
+        </div>
+    </div>
 </div>
 
-<button id="shareButton">
-📸 Share Configuration!
-</button>
+</div>
 
 <script>
 
 const ring=document.getElementById("ring");
+const magnetRingGroup=document.getElementById("magnetRingGroup");
 
 const center=325;
 
@@ -246,6 +403,11 @@ const slotRadiusOuter=205;
 const lockOffset=32; // how far the tight/loose toggle sits from its outer slot, radially outward
 
 const typeStates=[
+    {
+        cls:"empty",
+        text:"",
+        code:"E"
+    },
     {
         cls:"spacer",
         text:"",
@@ -297,7 +459,8 @@ for(let i=0;i<6;i++){
 
         const div=document.createElement("div");
 
-        div.className="slot spacer";
+        div.className="slot "+typeStates[0].cls;
+        div.textContent=typeStates[0].text;
         div.dataset.state=0;
 
         div.style.left=x+"px";
@@ -305,7 +468,7 @@ for(let i=0;i<6;i++){
 
         div.onclick=function(){
 
-            let state=(parseInt(div.dataset.state)+1)%3;
+            let state=(parseInt(div.dataset.state)+1)%4;
 
             div.dataset.state=state;
 
@@ -317,7 +480,7 @@ for(let i=0;i<6;i++){
 
         };
 
-        ring.appendChild(div);
+        magnetRingGroup.appendChild(div);
 
         if(cfg.isOuter){
             armEntry.outerDiv=div;
@@ -357,7 +520,7 @@ for(let i=0;i<6;i++){
 
             };
 
-            ring.appendChild(lockDiv);
+            magnetRingGroup.appendChild(lockDiv);
 
             armEntry.lockDiv=lockDiv;
 
@@ -371,6 +534,7 @@ for(let i=0;i<6;i++){
 
 function updateCounts(){
 
+    let empty=0;
     let spacer=0;
     let plus=0;
     let minus=0;
@@ -383,14 +547,18 @@ function updateCounts(){
 
             switch(parseInt(div.dataset.state)){
                 case 0:
-                    spacer++;
+                    empty++;
                     break;
 
                 case 1:
-                    plus++;
+                    spacer++;
                     break;
 
                 case 2:
+                    plus++;
+                    break;
+
+                case 3:
                     minus++;
                     break;
             }
@@ -405,6 +573,7 @@ function updateCounts(){
 
     });
 
+    document.getElementById("emptyCount").textContent=empty;
     document.getElementById("spacerCount").textContent=spacer;
     document.getElementById("plusCount").textContent=plus;
     document.getElementById("minusCount").textContent=minus;
@@ -432,7 +601,7 @@ fixedDiv.textContent="Fixed Magnet";
 ring.appendChild(fixedDiv);
 
 // --- Config code string: 6 arms, top first, clockwise, each "InnerOuterLock" ---
-// e.g. spacer/repel/loose arm -> "SRL". Arms joined with "-".
+// e.g. empty/repel/loose arm -> "ERL". Arms joined with "-".
 
 function buildConfigString(){
 
@@ -454,13 +623,11 @@ function updateConfigText(){
 
 }
 
-updateConfigText();
+// --- Parse a config string (typed, pasted, or from a URL) and apply it ---
 
-// --- Parse a pasted config string and apply it to the ring ---
+const configPattern=/^[ESAR][ESAR][TL](-[ESAR][ESAR][TL]){5}$/;
 
-const configPattern=/^[SAR][SAR][TL](-[SAR][SAR][TL]){5}$/;
-
-const typeCodeToState={S:0,A:1,R:2};
+const typeCodeToState={E:0,S:1,A:2,R:3};
 const lockCodeToState={T:0,L:1};
 
 function applyConfigString(str){
@@ -507,24 +674,629 @@ document.getElementById("configText").addEventListener("input",function(){
 
 });
 
-// --- Screenshot ---
+// --- Load a shared configuration from the URL, e.g. ?config=EET-EET-EET-EET-EET-EET ---
 
-document.getElementById("shareButton").onclick = async function(){
+(function loadConfigFromURL(){
 
-    this.style.visibility="hidden";
+    const params=new URLSearchParams(window.location.search);
+    const fromURL=params.get("config");
+
+    if(fromURL){
+        applyConfigString(fromURL);
+    }
+
+})();
+
+updateConfigText();
+
+// =====================================================================
+// SPIN SIMULATION (Test.html only)
+//
+// This models the fixed magnet as only meaningfully interacting with
+// whichever arm(s) are currently closest to it - not all six arms at
+// once - because real dipole-to-dipole magnetic force falls off sharply
+// with distance, and as the ring rotates, an arm's physical distance to
+// the fixed magnet grows quickly once it's more than ~20-30 degrees away.
+// So instead of a smooth sine wave from every arm, each arm gets a
+// narrow "field of influence" around alignment (delta = 0), and arms
+// far from that get essentially zero pull.
+//
+// Real-world numbers this is loosely based on: a fixed 1/4" x 1/8" N52
+// magnet interacting with 3/16" x 1/8" N52 magnets on an R188 ceramic-
+// ball bearing (very low native friction). That means:
+//  - BASE_DAMPING is kept very low (a good ceramic bearing is close to
+//    frictionless) so the ring coasts freely between arms.
+//  - The magnetic pull/push itself (MAGNET_STRENGTH + INFLUENCE_WIDTH)
+//    is mostly a CONSERVATIVE force - like a hill and valley, not
+//    friction. A weak nudge just doesn't have enough energy to climb
+//    out of the nearest valley (attract) and falls straight back in.
+//    A hard flick has enough energy to coast over several valleys and
+//    hills in a row before it runs out of steam.
+//  - ENGAGEMENT_DAMPING is deliberately kept small - it's *extra* energy
+//    loss on top of the free-spin drag, but only while near an arm, so
+//    a fast pass barely bleeds any speed while a slow one bleeds more
+//    (more time spent lingering near that arm). This is what makes a
+//    strong flick able to sail past several arms before eventually
+//    slowing down enough to get caught and then rattle around in the
+//    final valley for a few seconds before fully stopping.
+//  - INFLUENCE_WIDTH controls how many degrees of rotation the field
+//    reaches - keeping it well under the 60 degree arm spacing leaves
+//    genuine "empty" coasting room between arms, rather than the pull
+//    from neighboring arms always overlapping.
+//
+// Weight per arm: Attract = +1, Repel = -1, Empty/Spacer = 0 - so two
+// stacked Attracts = +2 (stronger pull), an Attract + Repel cancel to 0
+// (that arm is inert), etc.
+//
+// Tight vs Loose doesn't change the shape of the pull - it changes how
+// much extra energy is lost specifically while a LOOSE arm is passing
+// near the fixed magnet, standing in for the physical rattle/knock of a
+// magnet with some play in it. A fully loose ring should feel a bit
+// bumpier and settle slightly less cleanly than a fully tightened one.
+//
+// All constants below are meant to be tuned once you compare this to
+// the real toy - they're not derived from precise magnetic field math.
+// =====================================================================
+
+const MOMENT_OF_INERTIA=1.0;      // effective "mass" of the spinning ring
+const MAGNET_STRENGTH=27.0;       // peak magnetic torque strength at alignment
+const INFLUENCE_WIDTH=0.42;       // radians - how narrow each arm's field is (~24 degrees)
+const BASE_DAMPING=0.12;          // very low - free-spin drag from the ceramic bearing alone
+const ENGAGEMENT_DAMPING=1.1;     // extra drag while ANY arm is actively magnetically engaged
+const LOOSE_EXTRA_DAMPING=2.0;    // additional drag on top of that, specifically for loose arms
+const SETTLE_OMEGA_EPS=0.02;      // below this speed, with no torque, we consider it "at rest"
+const SETTLE_FRAME_HOLD=20;       // consecutive calm frames required before forcing a full stop
+
+let settleFrameCount=0;
+
+let simulateOn=false;
+let ringRotation=0;  // radians
+let ringOmega=0;     // rad/s
+let isDragging=false;
+let lastPointerAngle=0;
+let lastPointerTime=0;
+let recentDeltas=[];
+let rafId=null;
+let lastFrameTime=null;
+
+const dragTrack=document.getElementById("dragTrack");
+const simulateButton=document.getElementById("simulateButton");
+const flickButton=document.getElementById("flickButton");
+
+function applyRingTransform(){
+    magnetRingGroup.style.transform="rotate("+ringRotation+"rad)";
+}
+
+function getPointerAngle(evt){
+
+    const rect=ring.getBoundingClientRect();
+    const cx=rect.left+(325/650)*rect.width;
+    const cy=rect.top+(325/650)*rect.height;
+
+    return Math.atan2(evt.clientY-cy,evt.clientX-cx);
+
+}
+
+function normalizeAngleDelta(d){
+
+    while(d>Math.PI){ d-=2*Math.PI; }
+    while(d<-Math.PI){ d+=2*Math.PI; }
+
+    return d;
+
+}
+
+function onDragPointerDown(evt){
+
+    if(!simulateOn){
+        return;
+    }
+
+    isDragging=true;
+
+    if(rafId){
+        cancelAnimationFrame(rafId);
+        rafId=null;
+    }
+
+    ringOmega=0;
+    settleFrameCount=0;
+    lastPointerAngle=getPointerAngle(evt);
+    lastPointerTime=performance.now();
+    recentDeltas=[];
+
+    dragTrack.style.stroke="rgba(255,255,255,0.4)";
+
+    evt.preventDefault();
+
+}
+
+function onDragPointerMove(evt){
+
+    if(!isDragging){
+        return;
+    }
+
+    const angle=getPointerAngle(evt);
+    const now=performance.now();
+
+    const dAngle=normalizeAngleDelta(angle-lastPointerAngle);
+    const dt=(now-lastPointerTime)/1000;
+
+    ringRotation+=dAngle;
+    applyRingTransform();
+
+    recentDeltas.push({dAngle:dAngle,dt:dt});
+    if(recentDeltas.length>6){
+        recentDeltas.shift();
+    }
+
+    lastPointerAngle=angle;
+    lastPointerTime=now;
+
+}
+
+function onDragPointerUp(){
+
+    if(!isDragging){
+        return;
+    }
+
+    isDragging=false;
+    dragTrack.style.stroke="rgba(255,255,255,0.15)";
+
+    let sumAngle=0;
+    let sumDt=0;
+
+    recentDeltas.forEach(function(r){
+        sumAngle+=r.dAngle;
+        sumDt+=r.dt;
+    });
+
+    ringOmega=sumDt>0 ? (sumAngle/sumDt) : 0;
+
+    startPhysicsLoop();
+
+}
+
+dragTrack.addEventListener("pointerdown",onDragPointerDown);
+window.addEventListener("pointermove",onDragPointerMove);
+window.addEventListener("pointerup",onDragPointerUp);
+
+function typeWeight(state){
+
+    if(state===2){ return 1; }  // Attract
+    if(state===3){ return -1; } // Repel
+
+    return 0; // Empty or Spacer
+
+}
+
+// Localized "field of influence" - peaked at delta=0, falling off quickly
+// as the arm moves away from alignment with the fixed magnet.
+function influence(delta){
+
+    const x=delta/INFLUENCE_WIDTH;
+    return 1/(1+x*x);
+
+}
+
+// Derivative of influence(delta) with respect to delta, used to turn the
+// "field strength" into an actual torque (force wants to move toward
+// wherever influence is increasing, for an attracting arm).
+function influenceSlope(delta){
+
+    const x=delta/INFLUENCE_WIDTH;
+    const denom=1+x*x;
+
+    return (-2*delta/(INFLUENCE_WIDTH*INFLUENCE_WIDTH))/(denom*denom);
+
+}
+
+function computeNetTorque(rotation){
+
+    let torque=0;
+
+    for(let i=0;i<6;i++){
+
+        const arm=arms[i];
+
+        const innerW=typeWeight(parseInt(arm.innerDiv.dataset.state));
+        const outerW=typeWeight(parseInt(arm.outerDiv.dataset.state));
+        const w=innerW+outerW;
+
+        if(w===0){
+            continue;
+        }
+
+        const baseAngle=(Math.PI/3)*i;
+        const delta=normalizeAngleDelta(rotation+baseAngle);
+
+        // Attract (w>0) is pulled toward delta=0. Repel (w<0) is pushed
+        // toward delta=+-PI instead, since the sign flip below reverses
+        // which direction the slope pulls it.
+        torque+=w*MAGNET_STRENGTH*influenceSlope(delta);
+
+    }
+
+    return torque;
+
+}
+
+function computeDamping(rotation){
+
+    let engagement=0;
+    let looseEngagement=0;
+
+    for(let i=0;i<6;i++){
+
+        const arm=arms[i];
+
+        const innerW=typeWeight(parseInt(arm.innerDiv.dataset.state));
+        const outerW=typeWeight(parseInt(arm.outerDiv.dataset.state));
+        const w=Math.abs(innerW+outerW);
+
+        if(w===0){
+            continue;
+        }
+
+        const baseAngle=(Math.PI/3)*i;
+        const delta=normalizeAngleDelta(rotation+baseAngle);
+        const inf=influence(delta);
+
+        engagement+=w*inf;
+
+        const isLoose=parseInt(arm.lockDiv.dataset.state)===1;
+        if(isLoose){
+            looseEngagement+=w*inf;
+        }
+
+    }
+
+    return BASE_DAMPING+ENGAGEMENT_DAMPING*engagement+LOOSE_EXTRA_DAMPING*looseEngagement;
+
+}
+
+function physicsFrame(now){
+
+    if(!simulateOn){
+        rafId=null;
+        return;
+    }
+
+    if(lastFrameTime===null){
+        lastFrameTime=now;
+    }
+
+    let dt=(now-lastFrameTime)/1000;
+    if(dt>0.05){
+        dt=0.05; // clamp so a stalled tab doesn't cause a huge jump
+    }
+    lastFrameTime=now;
+
+    if(!isDragging){
+
+        const torque=computeNetTorque(ringRotation);
+        const damping=computeDamping(ringRotation);
+
+        const angularAccel=(torque-damping*ringOmega)/MOMENT_OF_INERTIA;
+
+        ringOmega+=angularAccel*dt;
+        ringRotation+=ringOmega*dt;
+
+        // Once it's essentially stopped and nothing is actively pulling on
+        // it for a short sustained stretch, snap fully to rest so it can't
+        // linger in a barely-visible wobble indefinitely.
+        if(Math.abs(ringOmega)<SETTLE_OMEGA_EPS && Math.abs(torque)<0.05){
+            settleFrameCount++;
+        }else{
+            settleFrameCount=0;
+        }
+
+        if(settleFrameCount>=SETTLE_FRAME_HOLD){
+            ringOmega=0;
+        }
+
+        applyRingTransform();
+
+    }
+
+    rafId=requestAnimationFrame(physicsFrame);
+
+}
+
+function startPhysicsLoop(){
+
+    if(rafId){
+        return;
+    }
+
+    lastFrameTime=null;
+    rafId=requestAnimationFrame(physicsFrame);
+
+}
+
+// --- Flick button: gives the ring a consistent, repeatable spin ---
+// Handy when dragging the ring precisely is fiddly, especially on mobile.
+
+const FLICK_OMEGA=22; // rad/s - a solid, consistent flick speed
+
+flickButton.onclick=function(){
+
+    if(!simulateOn){
+        return;
+    }
+
+    isDragging=false;
+    ringOmega=FLICK_OMEGA;
+    settleFrameCount=0;
+
+    startPhysicsLoop();
+
+};
+
+simulateButton.onclick=function(){
+
+    simulateOn=!simulateOn;
+
+    if(simulateOn){
+
+        simulateButton.innerHTML="Simulating 🌀<br>(Tap to Stop)";
+        simulateButton.classList.add("simActive");
+
+        dragTrack.style.pointerEvents="auto";
+        dragTrack.style.opacity="1";
+
+        flickButton.style.display="block";
+
+        magnetRingGroup.style.pointerEvents="none";
+
+        startPhysicsLoop();
+
+    }else{
+
+        simulateButton.innerHTML="Simulate 🌀<br>(Tap to Start)";
+        simulateButton.classList.remove("simActive");
+
+        dragTrack.style.pointerEvents="none";
+        dragTrack.style.opacity="0";
+
+        flickButton.style.display="none";
+
+        magnetRingGroup.style.pointerEvents="auto";
+
+        if(rafId){
+            cancelAnimationFrame(rafId);
+            rafId=null;
+        }
+
+        isDragging=false;
+        ringOmega=0;
+        ringRotation=0;
+        settleFrameCount=0;
+        applyRingTransform();
+
+    }
+
+};
+
+// --- Reset button: puts every slot and lock back to default ---
+
+document.getElementById("resetButton").onclick=function(){
+
+    arms.forEach(arm=>{
+
+        arm.innerDiv.dataset.state=0;
+        arm.innerDiv.className="slot "+typeStates[0].cls;
+        arm.innerDiv.textContent=typeStates[0].text;
+
+        arm.outerDiv.dataset.state=0;
+        arm.outerDiv.className="slot "+typeStates[0].cls;
+        arm.outerDiv.textContent=typeStates[0].text;
+
+        arm.lockDiv.dataset.state=0;
+        arm.lockDiv.className="lockToggle "+lockStates[0].cls;
+        arm.lockDiv.textContent=lockStates[0].text;
+
+    });
+
+    updateCounts();
+    updateConfigText();
+
+};
+
+// --- Random button: gives every slot and lock a random value ---
+
+document.getElementById("randomButton").onclick=function(){
+
+    arms.forEach(arm=>{
+
+        const innerState=Math.floor(Math.random()*typeStates.length);
+        const outerState=Math.floor(Math.random()*typeStates.length);
+        const lockState=Math.floor(Math.random()*lockStates.length);
+
+        arm.innerDiv.dataset.state=innerState;
+        arm.innerDiv.className="slot "+typeStates[innerState].cls;
+        arm.innerDiv.textContent=typeStates[innerState].text;
+
+        arm.outerDiv.dataset.state=outerState;
+        arm.outerDiv.className="slot "+typeStates[outerState].cls;
+        arm.outerDiv.textContent=typeStates[outerState].text;
+
+        arm.lockDiv.dataset.state=lockState;
+        arm.lockDiv.className="lockToggle "+lockStates[lockState].cls;
+        arm.lockDiv.textContent=lockStates[lockState].text;
+
+    });
+
+    updateCounts();
+    updateConfigText();
+
+};
+
+// --- Copy Code button: copies the current config code to the clipboard ---
+
+document.getElementById("copyCodeButton").onclick=async function(){
+
+    const text=document.getElementById("configText").value;
+    const btn=this;
+    const originalLabel=btn.textContent;
+
+    try{
+
+        await navigator.clipboard.writeText(text);
+
+    }catch(err){
+
+        const input=document.getElementById("configText");
+        input.select();
+        input.setSelectionRange(0,99999);
+        document.execCommand("copy");
+
+    }
+
+    btn.textContent="Copied! ✅";
+
+    setTimeout(function(){
+        btn.textContent=originalLabel;
+    },1200);
+
+};
+
+// --- Copy Link button: copies a shareable URL with the config baked in ---
+
+document.getElementById("copyLinkButton").onclick=async function(){
+
+    const btn=this;
+    const originalLabel=btn.textContent;
+
+    const shareURL=window.location.origin+window.location.pathname+"?config="+encodeURIComponent(buildConfigString());
+
+    try{
+
+        await navigator.clipboard.writeText(shareURL);
+
+    }catch(err){
+
+        const temp=document.createElement("textarea");
+        temp.value=shareURL;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+
+    }
+
+    btn.textContent="Link Copied! ✅";
+
+    setTimeout(function(){
+        btn.textContent=originalLabel;
+    },1500);
+
+};
+
+// --- Screenshot helpers ---
+
+function fallbackDownload(blob,filename){
+
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+
+    link.download=filename;
+    link.href=url;
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+}
+
+async function captureBlob(){
+
+    const simBtn=document.getElementById("simulateButton");
+    const track=document.getElementById("dragTrack");
+    const flickBtn=document.getElementById("flickButton");
+
+    simBtn.style.visibility="hidden";
+    const flickPrevDisplay=flickBtn.style.display;
+    flickBtn.style.display="none";
+    const trackPrevOpacity=track.style.opacity;
+    track.style.opacity="0";
 
     const canvas=await html2canvas(document.getElementById("captureArea"),{
         backgroundColor:"#1f1f1f",
         scale:2
     });
 
-    this.style.visibility="visible";
+    simBtn.style.visibility="visible";
+    flickBtn.style.display=flickPrevDisplay;
+    track.style.opacity=trackPrevOpacity;
 
-    const link=document.createElement("a");
+    return await new Promise(function(resolve){
+        canvas.toBlob(resolve,"image/png");
+    });
 
-    link.download=buildConfigString()+".png";
-    link.href=canvas.toDataURL("image/png");
-    link.click();
+}
+
+// --- Download button: always saves the PNG as a file, desktop and mobile ---
+
+document.getElementById("downloadButton").onclick=async function(){
+
+    const blob=await captureBlob();
+    fallbackDownload(blob,buildConfigString()+".png");
+
+};
+
+// --- Copy button: copies the PNG itself to the clipboard ---
+// The ClipboardItem is created with a *promise* of the blob (rather than
+// waiting for html2canvas first) so Safari still treats this as a direct
+// response to the click and allows the clipboard write.
+
+document.getElementById("copyImageButton").onclick=function(){
+
+    const btn=this;
+    const originalLabel=btn.textContent;
+    const filename=buildConfigString()+".png";
+
+    if(navigator.clipboard && window.ClipboardItem){
+
+        const blobPromise=captureBlob();
+
+        try{
+
+            const item=new ClipboardItem({"image/png":blobPromise});
+
+            navigator.clipboard.write([item]).then(function(){
+
+                btn.textContent="Copied! ✅";
+                setTimeout(function(){ btn.textContent=originalLabel; },1500);
+
+            }).catch(function(){
+
+                blobPromise.then(function(blob){
+                    fallbackDownload(blob,filename);
+                    btn.textContent="Copy failed - Downloaded 📥";
+                    setTimeout(function(){ btn.textContent=originalLabel; },2000);
+                });
+
+            });
+
+        }catch(err){
+
+            blobPromise.then(function(blob){
+                fallbackDownload(blob,filename);
+            });
+
+        }
+
+    }else{
+
+        captureBlob().then(function(blob){
+            fallbackDownload(blob,filename);
+            btn.textContent="Copy unsupported - Downloaded 📥";
+            setTimeout(function(){ btn.textContent=originalLabel; },2000);
+        });
+
+    }
 
 };
 
