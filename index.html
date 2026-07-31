@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Modusworks Phase One Configurator</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -38,6 +39,9 @@ h1{
     flex-direction:column;
     align-items:center;
     flex:0 0 auto;
+    width:100%;
+    max-width:650px;
+    box-sizing:border-box;
 }
 
 #sidePanel{
@@ -48,11 +52,21 @@ h1{
     box-sizing:border-box;
 }
 
-#ring{
+#ringScaler{
     position:relative;
+    width:100%;
+    max-width:650px;
+    aspect-ratio:1/1;
+    margin-top:10px;
+}
+
+#ring{
+    position:absolute;
+    left:0;
+    top:0;
     width:650px;
     height:650px;
-    margin-top:10px;
+    transform-origin:top left;
 }
 
 svg{
@@ -330,6 +344,7 @@ svg{
 
 <h1>Modusworks Phase One Configurator</h1>
 
+<div id="ringScaler">
 <div id="ring">
 
 <svg width="650" height="650">
@@ -357,6 +372,7 @@ svg{
 
 <button id="simulateButton" type="button">Simulate 🌀<br>(Tap to Start)</button>
 
+</div>
 </div>
 
 <div id="stats">
@@ -394,6 +410,28 @@ svg{
 
 const ring=document.getElementById("ring");
 const magnetRingGroup=document.getElementById("magnetRingGroup");
+const ringScaler=document.getElementById("ringScaler");
+
+// --- Responsive sizing ---
+// The ring's internal layout stays a fixed 650x650 coordinate system (so
+// none of the slot/lock/button pixel math below has to change). It's
+// visually scaled up or down to fit however big #ringScaler actually
+// renders on the current screen - desktop, tablet, or phone.
+
+function applyResponsiveScale(){
+
+    const scale=ringScaler.clientWidth/650;
+    ring.style.transform="scale("+scale+")";
+
+}
+
+applyResponsiveScale();
+
+if(window.ResizeObserver){
+    new ResizeObserver(applyResponsiveScale).observe(ringScaler);
+}else{
+    window.addEventListener("resize",applyResponsiveScale);
+}
 
 const center=325;
 
@@ -440,6 +478,61 @@ const lockStates=[
 
 let arms=[]; // one entry per arm: {innerDiv, outerDiv, lockDiv}
 
+// An Empty arm has nothing in it to click or rattle, so its lock is
+// forced Tight and disabled. Also, at least one arm must always stay
+// Tight - a fully Loose ring can't hold together against the core
+// before it's set on the backing - so switching the last Tight arm to
+// Loose is blocked.
+
+function armIsFullyEmpty(arm){
+    return parseInt(arm.innerDiv.dataset.state)===0 && parseInt(arm.outerDiv.dataset.state)===0;
+}
+
+// Only a Tight arm that actually has something in it (a magnet and/or a
+// spacer) is pressing against anything - a Tight but Empty arm isn't
+// holding the ring together at all, so it doesn't count here.
+function countMeaningfulTightArms(){
+    let count=0;
+    arms.forEach(function(a){
+        if(!armIsFullyEmpty(a) && parseInt(a.lockDiv.dataset.state)===0){
+            count++;
+        }
+    });
+    return count;
+}
+
+// Forces the first non-empty arm to Tight. Used as a safety net after
+// Random or a pasted config, in case none ended up meaningfully Tight.
+function forceSomeArmTight(){
+    for(let i=0;i<6;i++){
+        if(!armIsFullyEmpty(arms[i])){
+            arms[i].lockDiv.dataset.state=0;
+            arms[i].lockDiv.className="lockToggle "+lockStates[0].cls;
+            arms[i].lockDiv.textContent=lockStates[0].text;
+            return;
+        }
+    }
+}
+
+function enforceLockRules(arm){
+
+    if(armIsFullyEmpty(arm)){
+
+        arm.lockDiv.dataset.state=0;
+        arm.lockDiv.className="lockToggle "+lockStates[0].cls;
+        arm.lockDiv.textContent=lockStates[0].text;
+        arm.lockDiv.style.pointerEvents="none";
+        arm.lockDiv.style.opacity="0.35";
+
+    }else{
+
+        arm.lockDiv.style.pointerEvents="auto";
+        arm.lockDiv.style.opacity="1";
+
+    }
+
+}
+
 for(let i=0;i<6;i++){
 
     // i=0 starts at the top (-90deg) and increasing i rotates clockwise
@@ -475,6 +568,8 @@ for(let i=0;i<6;i++){
             div.className="slot "+typeStates[state].cls;
             div.textContent=typeStates[state].text;
 
+            enforceLockRules(armEntry);
+
             updateCounts();
             updateConfigText();
 
@@ -508,12 +603,20 @@ for(let i=0;i<6;i++){
 
             lockDiv.onclick=function(){
 
-                let state=(parseInt(lockDiv.dataset.state)+1)%2;
+                if(armIsFullyEmpty(armEntry)){
+                    return; // Empty arms can't have their lock toggled
+                }
 
-                lockDiv.dataset.state=state;
+                const newState=(parseInt(lockDiv.dataset.state)+1)%2;
 
-                lockDiv.className="lockToggle "+lockStates[state].cls;
-                lockDiv.textContent=lockStates[state].text;
+                if(newState===1 && countMeaningfulTightArms()<=1){
+                    return; // this is the last Tight arm - can't go Loose
+                }
+
+                lockDiv.dataset.state=newState;
+
+                lockDiv.className="lockToggle "+lockStates[newState].cls;
+                lockDiv.textContent=lockStates[newState].text;
 
                 updateCounts();
                 updateConfigText();
@@ -529,6 +632,7 @@ for(let i=0;i<6;i++){
     });
 
     arms.push(armEntry);
+    enforceLockRules(armEntry);
 
 }
 
@@ -660,7 +764,16 @@ function applyConfigString(str){
         arm.lockDiv.className="lockToggle "+lockStates[lockState].cls;
         arm.lockDiv.textContent=lockStates[lockState].text;
 
+        enforceLockRules(arm);
+
     });
+
+    // Safety net: a pasted code could describe a ring with no meaningfully
+    // Tight arm (either all-Loose, or Tight only on Empty arms) - if so,
+    // and at least one arm has something in it, force one back to Tight.
+    if(countMeaningfulTightArms()===0){
+        forceSomeArmTight();
+    }
 
     updateCounts();
 
@@ -728,11 +841,12 @@ updateConfigText();
 // stacked Attracts = +2 (stronger pull), an Attract + Repel cancel to 0
 // (that arm is inert), etc.
 //
-// Tight vs Loose doesn't change the shape of the pull - it changes how
-// much extra energy is lost specifically while a LOOSE arm is passing
-// near the fixed magnet, standing in for the physical rattle/knock of a
-// magnet with some play in it. A fully loose ring should feel a bit
-// bumpier and settle slightly less cleanly than a fully tightened one.
+// Tight vs Loose has NO effect on this simulation. In real life the
+// difference is roughly a millimeter of physical play in a loose magnet,
+// which produces an audible click but doesn't meaningfully change how
+// the ring spins - so the lock setting here is purely a labeling choice
+// for sharing a configuration (e.g. "I want an audible/clicky build"),
+// not a physics input.
 //
 // All constants below are meant to be tuned once you compare this to
 // the real toy - they're not derived from precise magnetic field math.
@@ -743,7 +857,6 @@ const MAGNET_STRENGTH=27.0;       // peak magnetic torque strength at alignment
 const INFLUENCE_WIDTH=0.42;       // radians - how narrow each arm's field is (~24 degrees)
 const BASE_DAMPING=0.12;          // very low - free-spin drag from the ceramic bearing alone
 const ENGAGEMENT_DAMPING=1.1;     // extra drag while ANY arm is actively magnetically engaged
-const LOOSE_EXTRA_DAMPING=2.0;    // additional drag on top of that, specifically for loose arms
 const SETTLE_OMEGA_EPS=0.02;      // below this speed, with no torque, we consider it "at rest"
 const SETTLE_FRAME_HOLD=20;       // consecutive calm frames required before forcing a full stop
 
@@ -926,7 +1039,6 @@ function computeNetTorque(rotation){
 function computeDamping(rotation){
 
     let engagement=0;
-    let looseEngagement=0;
 
     for(let i=0;i<6;i++){
 
@@ -946,14 +1058,9 @@ function computeDamping(rotation){
 
         engagement+=w*inf;
 
-        const isLoose=parseInt(arm.lockDiv.dataset.state)===1;
-        if(isLoose){
-            looseEngagement+=w*inf;
-        }
-
     }
 
-    return BASE_DAMPING+ENGAGEMENT_DAMPING*engagement+LOOSE_EXTRA_DAMPING*looseEngagement;
+    return BASE_DAMPING+ENGAGEMENT_DAMPING*engagement;
 
 }
 
@@ -1098,6 +1205,8 @@ document.getElementById("resetButton").onclick=function(){
         arm.lockDiv.className="lockToggle "+lockStates[0].cls;
         arm.lockDiv.textContent=lockStates[0].text;
 
+        enforceLockRules(arm);
+
     });
 
     updateCounts();
@@ -1105,29 +1214,90 @@ document.getElementById("resetButton").onclick=function(){
 
 };
 
-// --- Random button: gives every slot and lock a random value ---
+// --- Random button: only produces arm layouts that are physically buildable ---
+//
+// Valid combinations for a single arm's (inner, outer) pair:
+//  - Empty + Empty
+//  - Spacer + Attract / Spacer + Repel (either slot can hold the magnet)
+//  - Attract + Attract, or Repel + Repel (never opposite polarities)
+// Deliberately excluded: Spacer + Empty (not a real build), and any single
+// magnet without a spacer backing it up.
+//
+// A double-Spacer arm (both slots spacers, no magnet) is a special "keeper"
+// arm - it's only used when every other magnet-bearing arm is set Loose,
+// to physically hold the ring together at the core before it's set on the
+// backing. So when one shows up, it's forced Tight, and every other arm
+// that contains a magnet is forced Loose to match.
+
+const RANDOM_ARM_COMBOS=[
+    {inner:0,outer:0}, // Empty / Empty
+    {inner:1,outer:2}, // Spacer / Attract
+    {inner:1,outer:3}, // Spacer / Repel
+    {inner:2,outer:1}, // Attract / Spacer
+    {inner:3,outer:1}, // Repel / Spacer
+    {inner:2,outer:2}, // Attract / Attract
+    {inner:3,outer:3}  // Repel / Repel
+];
+
+function pickRandomArmCombo(){
+    return RANDOM_ARM_COMBOS[Math.floor(Math.random()*RANDOM_ARM_COMBOS.length)];
+}
+
+function applyArmStates(arm,innerState,outerState,lockState){
+
+    arm.innerDiv.dataset.state=innerState;
+    arm.innerDiv.className="slot "+typeStates[innerState].cls;
+    arm.innerDiv.textContent=typeStates[innerState].text;
+
+    arm.outerDiv.dataset.state=outerState;
+    arm.outerDiv.className="slot "+typeStates[outerState].cls;
+    arm.outerDiv.textContent=typeStates[outerState].text;
+
+    arm.lockDiv.dataset.state=lockState;
+    arm.lockDiv.className="lockToggle "+lockStates[lockState].cls;
+    arm.lockDiv.textContent=lockStates[lockState].text;
+
+}
 
 document.getElementById("randomButton").onclick=function(){
 
-    arms.forEach(arm=>{
+    const useKeeperArm=Math.random()<0.35;
+    const keeperIndex=useKeeperArm ? Math.floor(Math.random()*6) : -1;
 
-        const innerState=Math.floor(Math.random()*typeStates.length);
-        const outerState=Math.floor(Math.random()*typeStates.length);
-        const lockState=Math.floor(Math.random()*lockStates.length);
+    arms.forEach(function(arm,i){
 
-        arm.innerDiv.dataset.state=innerState;
-        arm.innerDiv.className="slot "+typeStates[innerState].cls;
-        arm.innerDiv.textContent=typeStates[innerState].text;
+        if(i===keeperIndex){
 
-        arm.outerDiv.dataset.state=outerState;
-        arm.outerDiv.className="slot "+typeStates[outerState].cls;
-        arm.outerDiv.textContent=typeStates[outerState].text;
+            // Forced double-Spacer keeper arm, always Tight
+            applyArmStates(arm,1,1,0);
+            enforceLockRules(arm);
+            return;
 
-        arm.lockDiv.dataset.state=lockState;
-        arm.lockDiv.className="lockToggle "+lockStates[lockState].cls;
-        arm.lockDiv.textContent=lockStates[lockState].text;
+        }
+
+        const combo=pickRandomArmCombo();
+        const hasMagnet=(combo.inner===2||combo.inner===3||combo.outer===2||combo.outer===3);
+
+        let lockState;
+
+        if(!hasMagnet){
+            lockState=0; // Empty arms are always Tight
+        }else if(useKeeperArm){
+            lockState=1; // Loose - required whenever a keeper arm is present
+        }else{
+            lockState=Math.floor(Math.random()*lockStates.length);
+        }
+
+        applyArmStates(arm,combo.inner,combo.outer,lockState);
+        enforceLockRules(arm);
 
     });
+
+    // Safety net: guarantee at least one meaningfully Tight arm exists
+    // (an Empty arm being "Tight" doesn't press against anything)
+    if(countMeaningfulTightArms()===0){
+        forceSomeArmTight();
+    }
 
     updateCounts();
     updateConfigText();
@@ -1222,6 +1392,11 @@ async function captureBlob(){
     const trackPrevOpacity=track.style.opacity;
     track.style.opacity="0";
 
+    // Always export at full native size, regardless of how small/large the
+    // ring is currently displayed on this particular screen.
+    const prevRingTransform=ring.style.transform;
+    ring.style.transform="scale(1)";
+
     const canvas=await html2canvas(document.getElementById("captureArea"),{
         backgroundColor:"#1f1f1f",
         scale:2
@@ -1230,6 +1405,7 @@ async function captureBlob(){
     simBtn.style.visibility="visible";
     flickBtn.style.display=flickPrevDisplay;
     track.style.opacity=trackPrevOpacity;
+    ring.style.transform=prevRingTransform;
 
     return await new Promise(function(resolve){
         canvas.toBlob(resolve,"image/png");
